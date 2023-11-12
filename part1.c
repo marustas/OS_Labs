@@ -4,11 +4,11 @@
 #include <sys/wait.h>
 
 int main() {
-    int pipefd[2];
+    int ppipe[2];
     pid_t pid;
 
     // Create a pipe
-    if (pipe(pipefd) == -1) {
+    if (pipe(ppipe) == -1) {
         perror("pipe");
         exit(EXIT_FAILURE);
     }
@@ -26,9 +26,9 @@ int main() {
 	Close read end of the pipe,
 	put STOUT into the write end of the pipe and close it
 	 */
-    close(pipefd[0]);
-    dup2 (pipefd[1], STDOUT_FILENO);
-    close(pipefd[1]);
+    close(ppipe[0]);
+    dup2 (ppipe[1], STDOUT_FILENO);
+    close(ppipe[1]);
 	
     // Execute 'ls /'
     execlp("ls", "ls", "/", NULL);
@@ -43,9 +43,9 @@ int main() {
 	Close write end of the pipe,
 	put STDIN into the read end of the pipe and close it
 	 */
-    close(pipefd[1]);
-    dup2 (pipefd[0], STDIN_FILENO);
-    close(pipefd[0]);
+    close(ppipe[1]);
+    dup2 (ppipe[0], STDIN_FILENO);
+    close(ppipe[0]);
 	wait(NULL);
 
     // Execute 'wc -l'
