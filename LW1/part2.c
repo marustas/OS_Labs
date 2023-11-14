@@ -38,7 +38,7 @@ int main() {
     int msgid;
     pid_t pid;
 
-    // Create a message queue and exit if an error occurs
+    // Create a message queue with a unique id and exit if an error occurs
     msgid = msgget(IPC_PRIVATE, 0666 | IPC_CREAT);
     if (msgid == -1) {
         perror("Failed to create Message Queue");
@@ -95,7 +95,7 @@ int main() {
 
         /* 
         Send the message with the size equal to the length.
-        Message type is 0 for the reasons mentioned in Parent process
+        Message type is 1, same as in Parent process
         Exit if an error occurs
         */
         if (msgsnd(msgid, &message, strlen(message.msg_text), 0) == -1) {
