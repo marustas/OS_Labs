@@ -54,7 +54,12 @@ int main() {
 
     if (pid > 0) {
         // Parent process
-        // Receive the message and exit if an error occurs
+        /* 
+        Receive the message with the defined max sixe in bytes
+        and exit if an error occurs.
+        Message type is 1, 
+        but it can be any number as long as we can keep track of the messages.
+        */
         if (msgrcv(msgid, &message, sizeof(message), 1, 0) == -1) {
             perror("Failed to receive the message");
             exit(EXIT_FAILURE);
@@ -63,7 +68,7 @@ int main() {
         printf("Received in parent: %s\n", message.msg_text);
         printf("Number of words in %s: %d\n", FILE_NAME, countWords(message.msg_text));
 
-        // Destroy the message queue
+        // Destroy the message queue and exit if an error occurs
         if (msgctl(msgid, IPC_RMID, NULL) == -1) {
             perror("msgctl(IPC_RMID) failed");
             return EXIT_FAILURE;
@@ -88,8 +93,12 @@ int main() {
 
         message.msg_type = 1;
 
-        // Send the message and exit if an error occurs
-        if (msgsnd(msgid, &message, sizeof(message.msg_text), 0) == -1) {
+        /* 
+        Send the message with the size equal to the length.
+        Message type is 0 for the reasons mentioned in Parent process
+        Exit if an error occurs
+        */
+        if (msgsnd(msgid, &message, strlen(message.msg_text), 0) == -1) {
             perror("Failed to send the message");
             exit(EXIT_FAILURE);
         }
