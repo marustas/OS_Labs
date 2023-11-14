@@ -7,16 +7,16 @@ int main() {
     int ppipe[2];
     pid_t pid;
 
-    // Create a pipe
+    // Create a pipe and check for error
     if (pipe(ppipe) == -1) {
-        perror("pipe");
+        perror("Failed to create a pipe");
         exit(EXIT_FAILURE);
     }
 
-    // Create a child process
+    // Create a child process and check for error
     pid = fork();
     if (pid == -1) {
-        perror("fork");
+        perror("Failed to fork");
         exit(EXIT_FAILURE);
     }
 
@@ -33,8 +33,8 @@ int main() {
     // Execute 'ls /'
     execlp("ls", "ls", "/", NULL);
 
-    // If an error then no return
-    perror("execlp");
+    // If an error then exit
+    perror("Failed to execute");
     exit(EXIT_FAILURE);
     } else {
     // Parent process 
@@ -52,7 +52,7 @@ int main() {
     execlp("wc", "wc", "-l", NULL);
 
     // Same as in Child process
-    perror("execlp");
+    perror("Failed to execute");
     exit(EXIT_FAILURE);
     }
 	return 0;
