@@ -24,7 +24,8 @@ int main() {
     if (pid == 0) { 
 	/*
 	Close read end of the pipe,
-	put STOUT into the write end of the pipe and close it
+	copy the write end of the pipe to STDOUT of the file descriptor
+    and close it
 	 */
     close(ppipe[0]);
     dup2 (ppipe[1], STDOUT_FILENO);
@@ -37,10 +38,10 @@ int main() {
     };
     } else {
     // Parent process 
-
 	/*
 	Close write end of the pipe,
-	put STDIN into the read end of the pipe and close it
+	copy the read end of the pipe to STDIN of the file desriptor
+    and close it
 	 */
     close(ppipe[1]);
     dup2 (ppipe[0], STDIN_FILENO);
