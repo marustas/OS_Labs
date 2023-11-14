@@ -8,12 +8,14 @@
 #include <ctype.h>
 
 #define MAX_TEXT 512
+#define FILE_NAME "text.txt"
 
 struct message_buffer {
     long msg_type;
     char msg_text[MAX_TEXT];
 } message;
 
+//Function for counting words
 int countWords(char *str) {
     int state = 0;
     unsigned count = 0;
@@ -35,16 +37,15 @@ int countWords(char *str) {
 int main() {
     int msgid;
     pid_t pid;
-    char *filename = "Test.txt";
 
-    // Create a message queue
+    // Create a message queue and exit if an error occurs
     msgid = msgget(IPC_PRIVATE, 0666 | IPC_CREAT);
     if (msgid == -1) {
-        perror("Failedd to create Message Queue");
+        perror("Failed to create Message Queue");
         exit(EXIT_FAILURE);
     }
 
-    // Fork the process
+    // Fork the process and exit if an error occurs
     pid = fork();
     if (pid == -1) {
         perror("Failed to fork");
@@ -53,15 +54,14 @@ int main() {
 
     if (pid > 0) {
         // Parent process
-
-        // Receive the message
+        // Receive the message and exit if an error occurs
         if (msgrcv(msgid, &message, sizeof(message), 1, 0) == -1) {
             perror("Failed to receive the message");
             exit(EXIT_FAILURE);
         }
 
         printf("Received in parent: %s\n", message.msg_text);
-        printf("Word count: %d\n", countWords(message.msg_text));
+        printf("Number of words in %s: %d\n", FILE_NAME, countWords(message.msg_text));
 
         // Destroy the message queue
         if (msgctl(msgid, IPC_RMID, NULL) == -1) {
@@ -73,8 +73,8 @@ int main() {
         FILE *file;
         size_t bytesRead;
 
-        //Open the file
-        file = fopen(filename, "r");
+        //Open the file and exit if an error occurs
+        file = fopen(FILE_NAME, "r");
         if (file == NULL) {
             perror("Failed to open file");
             exit(EXIT_FAILURE);
@@ -88,7 +88,7 @@ int main() {
 
         message.msg_type = 1;
 
-        // Send the message
+        // Send the message and exit if an error occurs
         if (msgsnd(msgid, &message, sizeof(message.msg_text), 0) == -1) {
             perror("Failed to send the message");
             exit(EXIT_FAILURE);
