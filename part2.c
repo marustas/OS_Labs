@@ -9,10 +9,10 @@
 
 #define MAX_TEXT 512
 
-struct message {
+struct message_buffer {
     long msg_type;
     char msg_text[MAX_TEXT];
-};
+} message;
 
 int countWords(char *str) {
     int state = 0;
@@ -53,16 +53,15 @@ int main() {
 
     if (pid > 0) {
         // Parent process
-        struct message msg_to_receive;
 
-        // Receive a message
-        if (msgrcv(msgid, &msg_to_receive, sizeof(msg_to_receive), 1, 0) == -1) {
+        // Receive the message
+        if (msgrcv(msgid, &message, sizeof(message), 1, 0) == -1) {
             perror("Failed to receive the message");
             exit(EXIT_FAILURE);
         }
 
-        printf("Received in parent: %s\n", msg_to_receive.msg_text);
-        printf("Word count: %d\n", countWords(msg_to_receive.msg_text));
+        printf("Received in parent: %s\n", message.msg_text);
+        printf("Word count: %d\n", countWords(message.msg_text));
 
         // Destroy the message queue
         if (msgctl(msgid, IPC_RMID, NULL) == -1) {
@@ -71,32 +70,30 @@ int main() {
         }
     } else {
         // Child process
-        struct message msg_to_send;
         FILE *file;
         size_t bytesRead;
 
+        //Open the file
         file = fopen(filename, "r");
-        if (file == NULL)
-        {
+        if (file == NULL) {
             perror("Failed to open file");
             exit(EXIT_FAILURE);
         }
 
-        // Read file content
-        bytesRead = fread(msg_to_send.msg_text, 1, MAX_TEXT - 1, file);
-        msg_to_send.msg_text[bytesRead] = '\0';
+        // Read the content of the file, each element is 1 byte, read into the message
+        bytesRead = fread(message.msg_text, 1, MAX_TEXT - 1, file);
+        message.msg_text[bytesRead] = '\0';
 
         fclose(file);
 
-        msg_to_send.msg_type = 1;
+        message.msg_type = 1;
 
-        // Send message
-        if (msgsnd(msgid, &msg_to_send, sizeof(msg_to_send.msg_text), 0) == -1) {
+        // Send the message
+        if (msgsnd(msgid, &message, sizeof(message.msg_text), 0) == -1) {
             perror("Failed to send the message");
             exit(EXIT_FAILURE);
         }
-
         exit(EXIT_SUCCESS);
     }
-    return EXIT_SUCCESS;
+    return 0;
 }
