@@ -1,31 +1,38 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #define NUM_THREADS 3
-#define NUM_INCREMENTS 15
+#define TOTAL_OPERATIONS 15
 
 int buffer = 0;
+int counter = 0;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void* increment_buffer(void* thread_id) {
     int tid = *((int*)thread_id);
     int changes = 0;
 
-    for (int i = 0; i < NUM_INCREMENTS; ++i) {
-        // Lock the mutex before entering the critical section
+    while (1) {
         pthread_mutex_lock(&mutex);
 
-        // Critical section
-        printf("TID: %d, PID: %ld, Buffer: %d\n", tid, (long)getpid(), buffer);
-        buffer++;
-        changes++;
+        if (counter < TOTAL_OPERATIONS) {
+            if (counter % NUM_THREADS == tid) {
+                printf("TID: %lu, PID: %ld, Buffer: %d\n", pthread_self(), (long)getpid(), buffer);
+                buffer++;
+                changes++;
+                counter++;
+            }
+        }
 
-        // Unlock the mutex after exiting the critical section
         pthread_mutex_unlock(&mutex);
+
+        if (counter >= TOTAL_OPERATIONS) {
+            break;
+        }
     }
 
-    // Return the number of changes made by the thread
     return (void*)changes;
 }
 
@@ -33,7 +40,6 @@ int main() {
     pthread_t threads[NUM_THREADS];
     int thread_ids[NUM_THREADS];
 
-    // Create threads
     for (int i = 0; i < NUM_THREADS; ++i) {
         thread_ids[i] = i;
         if (pthread_create(&threads[i], NULL, increment_buffer, (void*)&thread_ids[i]) != 0) {
@@ -43,8 +49,8 @@ int main() {
     }
 
     int total_changes = 0;
+    int changes_by_thread[NUM_THREADS];
 
-    // Wait for threads to finish and collect the number of changes from each thread
     for (int i = 0; i < NUM_THREADS; ++i) {
         void* changes;
         if (pthread_join(threads[i], &changes) != 0) {
@@ -52,11 +58,15 @@ int main() {
             exit(EXIT_FAILURE);
         }
 
-        total_changes += (int)changes;
+        changes_by_thread[i] = (int)changes;
+        total_changes += changes_by_thread[i];
     }
 
-    // Print the total changes made by all threads
-    printf("\nTotal changes made by all threads: %d\n", total_changes);
+    for (int i = 0; i < NUM_THREADS; ++i) {
+        printf("TID %lu worked on the buffer %d times\n", threads[i], changes_by_thread[i]);
+    }
+
+    printf("Total changes made by all threads: %d\n", total_changes);
 
     return 0;
 }
