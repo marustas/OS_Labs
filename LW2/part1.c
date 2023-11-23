@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <time.h>
 
 #define NUM_THREADS 3
 #define TOTAL_OPERATIONS 15
@@ -9,6 +10,11 @@
 int buffer = 0;
 int counter = 0;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+int random_sleep() {
+    // Generate a random number between 1 and 10 microseconds
+    return (rand() % 1000);
+}
 
 void* increment_buffer(void* thread_id) {
     int tid = *((int*)thread_id);
@@ -18,15 +24,16 @@ void* increment_buffer(void* thread_id) {
         pthread_mutex_lock(&mutex);
 
         if (counter < TOTAL_OPERATIONS) {
-            if (counter % NUM_THREADS == tid) {
                 printf("TID: %lu, PID: %ld, Buffer: %d\n", pthread_self(), (long)getpid(), buffer);
                 buffer++;
                 changes++;
                 counter++;
-            }
         }
 
         pthread_mutex_unlock(&mutex);
+
+        // Introduce a random sleep duration
+        usleep(random_sleep());
 
         if (counter >= TOTAL_OPERATIONS) {
             break;
@@ -37,6 +44,9 @@ void* increment_buffer(void* thread_id) {
 }
 
 int main() {
+    // Seed for random number generation
+    srand(time(NULL));
+
     pthread_t threads[NUM_THREADS];
     int thread_ids[NUM_THREADS];
 
