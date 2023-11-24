@@ -4,8 +4,9 @@
 #include <unistd.h>
 #include <time.h>
 
+//Set the number of threads and buffer increments
 #define NUM_THREADS 3
-#define TOTAL_OPERATIONS 15
+#define TOTAL_INCREMENTS 15
 //buffer and counter are initialized as shared variables
 int buffer = 0;
 int counter = 0;
@@ -23,10 +24,10 @@ void* increment_buffer(void* thread_id) {
     int changes = 0;
 
     while (1) {
-        //Lock the mutex
+        //Lock the mutex object
         pthread_mutex_lock(&mutex);
         //The counter is incremented until it reaches the desired number of total operations(15)
-        if (counter < TOTAL_OPERATIONS) {
+        if (counter < TOTAL_INCREMENTS) {
             //Print the Thread ID, process ID and the value of the buffer
             printf("TID: %lu, PID: %ld, Buffer: %d\n", pthread_self(), (long)getpid(), buffer);
             //Increment the value of the buffer
@@ -36,13 +37,13 @@ void* increment_buffer(void* thread_id) {
             //Increment counter 
             counter++;
         }
-        //Lock the mutex
+        //Lock the mutex object
         pthread_mutex_unlock(&mutex);
 
         //Put the thread to sleep for a generated amount of time
         usleep(random_sleep());
         //Check if the value of the counter violates the limit of total operation
-        if (counter >= TOTAL_OPERATIONS) {
+        if (counter >= TOTAL_INCREMENTS) {
             break;
         }
     }
@@ -69,7 +70,7 @@ int main() {
     int changes_by_thread[NUM_THREADS];
     /*
     Wait for the threads to finish execution
-    Collect the number of changed done by the thread
+    Collect the number of increments done by the thread
     Join into the main thread
     Handle possible errors in thread joinment
     */
@@ -88,7 +89,7 @@ int main() {
         printf("TID %lu worked on the buffer %d times\n", threads[i], changes_by_thread[i]);
     }
 
-    printf("Total changes made by all threads: %d\n", total_changes);
+    printf("Total buffer accesses: %d\n", total_changes);
 
     return 0;
 }
