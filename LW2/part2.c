@@ -94,24 +94,28 @@ void reader_process(int sleep_time) {
         Lock the semaphore, so that the writer can't write
         Both of the readers can read
         Enter the critical section
+        Exclusive acces to reader_count
         */
         sem_wait(&shared_mem->reader_mutex);
+        //Check if it's the first reader and block the writer
         if (shared_mem->read_count == 1) {
             sem_wait(&shared_mem->writer_mutex);
         }
+        //Unlock the reader semaphore to allow the 2nd reader into its critical section
         sem_post(&shared_mem->reader_mutex);
 
         printf("The reader (%d) reads the value %d\n", getpid(), shared_mem->VAR);
 
+        //Lock the reader semaphore to safely update read_count
         sem_wait(&shared_mem->reader_mutex);
         shared_mem->read_count--;
+        //Check if it's the last reader and release the writer to allow it into its critical section
         if (shared_mem->read_count == 0) {
             sem_post(&shared_mem->writer_mutex);
         }
         printf("The reader (%d) releases the lock\n", getpid());
        /*
         Unlock the semaphore, the critical section has ended
-        The writer can now write to VAR 
         */
         sem_post(&shared_mem->reader_mutex);
         //Delay the reader for designated amount of time
