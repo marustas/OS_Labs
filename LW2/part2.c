@@ -67,15 +67,17 @@ void writer_process() {
         shared_mem->VAR++;
         printf("The writer (%d) writes the value %d\n", getpid(), shared_mem->VAR);
         printf("The writer releases the lock\n");
+
+        //If the VAR is equal to MAX, the flag is raised(set to 1)
+        if (shared_mem->VAR == MAX) {
+            shared_mem->terminate = 1;
+        }
+
         /*
         Unlock the semaphore, the critical section has ended
         The readers can now read the VAR
         */
         sem_post(&shared_mem->writer_mutex);
-        //If the VAR is equal to MAX, the flag is raised(set to 1)
-        if (shared_mem->VAR == MAX) {
-            shared_mem->terminate = 1;
-        }
         //Delay writer for messages in the terminal to be visible
         sleep(1); 
     }
@@ -85,10 +87,6 @@ void writer_process() {
 //Reader process
 void reader_process(int sleep_time) {
     while (1) {
-        //Check if the flag is raised
-        if (shared_mem->terminate) {
-            break;
-        }
         /*
         Lock the semaphore, so that the writer can't write
         Both of the readers can read
@@ -96,9 +94,16 @@ void reader_process(int sleep_time) {
         Exclusive acces to reader_count
         */
         sem_wait(&shared_mem->reader_mutex);
+
+        //Check if the flag is raised
+        if (shared_mem->terminate) {
+            break;
+        }
+        
         printf("The reader (%d) acquires the lock\n", getpid());
+
         //Check if it's the first reader and block the writer
-        if (shared_mem->read_count == 1) {
+        if (++shared_mem->read_count == 1) {
             sem_wait(&shared_mem->writer_mutex);
         }
         //Unlock the reader semaphore to allow the 2nd reader into its critical section
