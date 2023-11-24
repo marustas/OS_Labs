@@ -58,12 +58,12 @@ void cleanup_shared_memory() {
 void writer_process() {
     //The writer will write the VAR until it reached MAX value
     while (shared_mem->VAR < MAX) {
-        printf("The writer acquires the lock\n");
         /*
         Lock the semaphore, so that the readers can't read
         The writer enters critical section
         */
         sem_wait(&shared_mem->writer_mutex);
+        printf("The writer acquires the lock\n");
         shared_mem->VAR++;
         printf("The writer (%d) writes the value %d\n", getpid(), shared_mem->VAR);
         printf("The writer releases the lock\n");
@@ -89,7 +89,6 @@ void reader_process(int sleep_time) {
         if (shared_mem->terminate) {
             break;
         }
-        printf("The reader (%d) acquires the lock\n", getpid());
         /*
         Lock the semaphore, so that the writer can't write
         Both of the readers can read
@@ -97,6 +96,7 @@ void reader_process(int sleep_time) {
         Exclusive acces to reader_count
         */
         sem_wait(&shared_mem->reader_mutex);
+        printf("The reader (%d) acquires the lock\n", getpid());
         //Check if it's the first reader and block the writer
         if (shared_mem->read_count == 1) {
             sem_wait(&shared_mem->writer_mutex);
