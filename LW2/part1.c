@@ -40,7 +40,7 @@ void* increment_buffer(void* thread_id) {
         //Lock the mutex object
         pthread_mutex_unlock(&mutex);
 
-        //Put the thread to sleep for a generated amount of time
+        //Delay for a generated amount of time
         usleep(random_sleep());
         //Check if the value of the counter violates the limit of total operation
         if (counter >= TOTAL_INCREMENTS) {
