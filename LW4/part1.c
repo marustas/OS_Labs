@@ -12,6 +12,58 @@ int cmpfunc(const void *a, const void *b)
     return (*(int *)a - *(int *)b);
 }
 
+// FCFS Algorithm
+int fcfs(int requests[], int head)
+{
+    int total_movement = 0;
+    for (int i = 0; i < REQUESTS; i++)
+    {
+        printf("request: %d\n", requests[i]);
+        total_movement += abs(requests[i] - head);
+        head = requests[i];
+    }
+    return total_movement;
+}
+
+int sstf(int requests[], int head)
+{
+    // Initial number of head movements
+    int head_movement = 0;
+    // Set the current position
+    int current_position = head;
+
+    // Process requests in sorted order
+    for (int i = 0; i < REQUESTS; ++i)
+    {
+        int closest_index = -1;
+        int closest_distance = DISK_SIZE + 1;
+
+        // Find the closest request to the current position
+        for (int j = 0; j < REQUESTS; ++j)
+        {
+            if (requests[j] != -1)
+            {
+                // Calculate the distance and compare it with the current closest distance
+                int distance = abs(requests[j] - current_position);
+                if (distance < closest_distance)
+                {
+                    // Set the new closest distance and the closest index
+                    closest_distance = distance;
+                    closest_index = j;
+                }
+            }
+        }
+
+        // Move to the closest request
+        head_movement += closest_distance;
+        current_position = requests[closest_index];
+
+        // Mark the processed request as serviced
+        requests[closest_index] = -1;
+    }
+    return head_movement;
+}
+
 int cscan(int requests[], int head)
 {
     int head_movement = 0;
