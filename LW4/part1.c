@@ -42,6 +42,8 @@ int main(int argc, char *argv[])
     printf("Total head movement for SSTF: %d\n", sstf(requests, initial_head));
     printf("Total head movement for SCAN: %d\n", scan(requests, initial_head));
     printf("Total head movement for C-SCAN: %d\n", cscan(requests, initial_head));
+    printf("Total head movement for LOOK: %d\n", look(requests, initial_head));
+    printf("Total head movement for C-LOOK: %d\n", clook(requests, initial_head));
     return 0;
 }
 
@@ -184,8 +186,8 @@ int cscan(int requests[], int head)
         head_movement += abs(right[i] - current_position);
         current_position = right[i];
     }
-    // Go to the start of the disk and set the current position as 0
 
+    // Go to the start of the disk and set the current position as 0
     head_movement += abs(DISK_SIZE - current_position - 1);
     head_movement += DISK_SIZE - 1;
 
@@ -200,3 +202,74 @@ int cscan(int requests[], int head)
     return head_movement;
 }
 
+// LOOK Algorithm
+int look(int requests[], int head)
+{
+    int head_movement = 0;
+    int current_position = head;
+
+    // Sort the requests array using qsort
+    qsort(requests, REQUESTS, sizeof(int), cmpfunc);
+
+    // Find the requests smaller than the head
+    int current_index = 0;
+    while (current_index < REQUESTS && requests[current_index] < current_position)
+    {
+        current_index++;
+    }
+
+    // Process requests in the direction of the largest value
+    for (int i = current_index; i < REQUESTS; i++)
+    {
+        head_movement += abs(current_position - requests[i]);
+        current_position = requests[i];
+    }
+
+    // Process requests in the direction of the smallest value first
+    for (int i = current_index - 1; i >= 0; i--)
+    {
+        head_movement += abs(current_position - requests[i]);
+        current_position = requests[i];
+    }
+
+    //Return the total head movement
+    return head_movement;
+}
+
+// CLOOK Algorithm
+int clook(int requests[], int head)
+{
+    int head_movement = 0;
+    int current_position = head;
+
+    // Sort the requests array using qsort
+    qsort(requests, REQUESTS, sizeof(int), cmpfunc);
+
+    // Find the requests smaller than the head
+    int current_index = 0;
+    while (current_index < REQUESTS && requests[current_index] < current_position)
+    {
+        current_index++;
+    }
+
+    // Process requests in the direction of the largest value
+    for (int i = current_index; i < REQUESTS; i++)
+    {
+        head_movement += abs(current_position - requests[i]);
+        current_position = requests[i];
+    }
+    
+    //Go to the smallest value among requests and set it as current postion
+    head_movement+= current_position - requests[0];
+    current_position = requests[0];
+
+    // Process requests in the direction of the smallest value first
+    for (int i = 0; i < current_index; i++)
+    {
+        head_movement += abs(current_position - requests[i]);
+        current_position = requests[i];
+    }
+
+    //Return the total head movement
+    return head_movement;
+}
