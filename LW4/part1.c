@@ -5,6 +5,45 @@
 #define DISK_SIZE 200
 #define REQUESTS 8
 
+//Initialize the functions representing the scheduling algorithms
+int fcfs(int requests[], int initial_head);
+int sstf(int requests[], int initial_head);
+int scan(int requests[], int initial_head);
+int cscan(int requests[], int initial_head);
+int look(int requests[], int initial_head);
+int clook(int requests[], int initial_head);
+
+
+int main(int argc, char *argv[])
+{
+    //Create an array of 1000 random requests
+    int requests[8] = {176, 79, 34, 60, 92, 11, 41, 114};
+    int initial_head;
+
+    // Check for valid command line argument for initial head position
+    if (argc != 2)
+    {
+        printf("Usage: %s <initial_head_position>\n", argv[0]);
+        return -1;
+    }
+    // Set the initial head to the command line argument
+    initial_head = atoi(argv[1]);
+    if (initial_head < 0 || initial_head >= DISK_SIZE)
+    {
+        printf("Invalid initial head position. Must be between 0 and %d.\n", DISK_SIZE - 1);
+        return -1;
+    }
+
+    // Seed random number generator
+    srand(time(NULL));
+
+    // Apply and print results of each algorithm
+    printf("Total head movement for FCFS: %d\n", fcfs(requests, initial_head));
+    printf("Total head movement for SSTF: %d\n", sstf(requests, initial_head));
+    printf("Total head movement for SCAN: %d\n", scan(requests, initial_head));
+    printf("Total head movement for C-SCAN: %d\n", cscan(requests, initial_head));
+    return 0;
+}
 
 // Function to compare two integers for qsort
 int cmpfunc(const void *a, const void *b)
@@ -15,60 +54,104 @@ int cmpfunc(const void *a, const void *b)
 // FCFS Algorithm
 int fcfs(int requests[], int head)
 {
+    //Go through each request sequentially in the specified sequence
     int total_movement = 0;
     for (int i = 0; i < REQUESTS; i++)
     {
-        printf("request: %d\n", requests[i]);
         total_movement += abs(requests[i] - head);
         head = requests[i];
     }
     return total_movement;
 }
 
-int sstf(int requests[], int head)
-{
-    // Initial number of head movements
+// SSTF Algorithm
+int sstf(int original_requests[], int head) {
+    int requests[REQUESTS];
+    //Copy the array
+    for (int i = 0; i < REQUESTS; i++)
+    {
+        requests[i] = original_requests[i];
+    }
     int head_movement = 0;
-    // Set the current position
     int current_position = head;
 
-    // Process requests in sorted order
+    //Go through the closest cylinder
     for (int i = 0; i < REQUESTS; ++i)
     {
         int closest_index = -1;
         int closest_distance = DISK_SIZE + 1;
 
-        // Find the closest request to the current position
         for (int j = 0; j < REQUESTS; ++j)
         {
             if (requests[j] != -1)
             {
-                // Calculate the distance and compare it with the current closest distance
                 int distance = abs(requests[j] - current_position);
                 if (distance < closest_distance)
                 {
-                    // Set the new closest distance and the closest index
                     closest_distance = distance;
                     closest_index = j;
                 }
             }
         }
-
-        // Move to the closest request
+        //Add the head movement
         head_movement += closest_distance;
         current_position = requests[closest_index];
 
-        // Mark the processed request as serviced
         requests[closest_index] = -1;
     }
+    //Returnt the total number of head movements
     return head_movement;
 }
 
+// SCAN Algorithm
+int scan(int requests[], int head)
+{
+    int head_movement = 0;
+    int current_position = head;
+
+    // Sort the requests array using qsort
+    qsort(requests, REQUESTS, sizeof(int), cmpfunc);
+
+    // Find the requests smaller than the head
+    int current_index = 0;
+    while (current_index < REQUESTS && requests[current_index] < current_position)
+    {
+        current_index++;
+    }
+
+    // Process requests in the direction of the smallest value first
+    for (int i = current_index - 1; i >= 0; i--)
+    {
+        head_movement += abs(current_position - requests[i]);
+        current_position = requests[i];
+    }
+
+    // Reverse direction and process requests in the direction of the largest value
+    if (current_index < REQUESTS)
+    {
+        // Add the movement to the smallest end of the disk if there are requests in the other direction
+        head_movement += current_position; // moving to 0
+        current_position = 0;
+    }
+
+    for (int i = current_index; i < REQUESTS; i++)
+    {
+        head_movement += abs(current_position - requests[i]);
+        current_position = requests[i];
+    }
+    //Return the total head movement
+    return head_movement;
+}
+
+// CSCAN Algorithm
 int cscan(int requests[], int head)
 {
     int head_movement = 0;
     int current_position = head;
+
+    // Sort in ascending order
     qsort(requests, REQUESTS, sizeof(int), cmpfunc);
+
     // Find the index where the current position is located
     int count = 0;
     for (int j = 0; j < REQUESTS; j++)
@@ -113,37 +196,7 @@ int cscan(int requests[], int head)
         head_movement += abs(left[i] - current_position);
         current_position = left[i];
     }
-
+    //Return the total head movement
     return head_movement;
 }
 
-int main(int argc, char *argv[])
-{
-    int requests[REQUESTS] = { 176, 79, 34, 60, 92, 11, 41, 114 };
-    int initial_head;
-
-    // Check for valid command line argument for initial head position
-    if (argc != 2)
-    {
-        printf("Usage: %s <initial_head_position>\n", argv[0]);
-        return -1;
-    }
-
-    initial_head = atoi(argv[1]);
-    if (initial_head < 0 || initial_head >= DISK_SIZE)
-    {
-        printf("Invalid initial head position. Must be between 0 and %d.\n", DISK_SIZE - 1);
-        return -1;
-    }
-
-    qsort(requests,REQUESTS, sizeof(int), cmpfunc);
-
-    // Seed random number generator
-    srand(time(NULL));
-
-    // Apply and print results of each algorithm
-    printf("Total head movement for C-SCAN: %d\n", cscan(requests, initial_head));
-    // Call and print results for other algorithms
-
-    return 0;
-}
