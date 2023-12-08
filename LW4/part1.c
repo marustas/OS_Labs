@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define DISK_SIZE 200
-#define REQUESTS 8
+#define DISK_SIZE 5000
+#define REQUESTS 1000
 
 //Initialize the functions representing the scheduling algorithms
 int fcfs(int requests[], int initial_head);
@@ -12,12 +12,13 @@ int scan(int requests[], int initial_head);
 int cscan(int requests[], int initial_head);
 int look(int requests[], int initial_head);
 int clook(int requests[], int initial_head);
-
+void generate_requests(int requests[]);
 
 int main(int argc, char *argv[])
 {
-    //Create an array of 1000 random requests
-    int requests[8] = {176, 79, 34, 60, 92, 11, 41, 114};
+    //Create an array of 1000 random requests and initialize a head
+    int requests[REQUESTS];
+    generate_requests(requests);
     int initial_head;
 
     // Check for valid command line argument for initial head position
@@ -272,4 +273,13 @@ int clook(int requests[], int head)
 
     //Return the total head movement
     return head_movement;
+}
+
+// Function to generate random requests
+void generate_requests(int requests[])
+{
+    for (int i = 0; i < REQUESTS; i++)
+    {
+        requests[i] = rand() % DISK_SIZE;
+    }
 }
